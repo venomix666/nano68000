@@ -1,0 +1,106 @@
+// nano68000
+//
+// A general purpose 68k computer designed primarily for use with
+// the Tang Nano 20K board.
+//
+// Copyright (C) 2026 Henrik Löfgren
+
+module nano68000_top
+(
+    input           clk_i,
+    input           rst_i //S1
+    //input           clkusb_i,
+    //input           uart_rx_i,
+    //input           uart_b_rx_i,
+    //output          uart_tx_o,
+    //output          uart_b_tx_o,
+    //output          leds[5:0],
+    //output          ws2812_o,
+    //inout [12:0]    gpio,
+    //output          sdclk,
+    //output            tmds_clk_p    ,
+    //output            tmds_clk_n    ,
+    //output     [2:0]  tmds_data_p   ,//{r,g,b}
+    //output     [2:0]  tmds_data_n   ,
+    //inout           sdcmd,
+    //inout [3:0]     sddat,
+    //inout           usb_dp,
+    //inout           usb_dm,
+    // Magic SDRAM pin names
+    //output O_sdram_clk,                                                        
+    //output O_sdram_cke,                                                        
+    //output O_sdram_cs_n,            // chip select                             
+    //output O_sdram_cas_n,           // columns address select                  
+    //output O_sdram_ras_n,           // row address select                      
+    //output O_sdram_wen_n,           // write enable                            
+    //inout [31:0] IO_sdram_dq,       // 32 bit bidirectional data bus           
+    //output [10:0] O_sdram_addr,     // 11 bit multiplexed address bus          
+    //output [1:0] O_sdram_ba,        // two banks                               
+    //output [3:0] O_sdram_dqm        // 32/4        
+);
+
+reg         phi1;
+reg         phi2;
+reg         rst_d;
+// Generate phi1 and phi1
+always @(posedge clk_i) begin
+    rst_d <= rst_i;
+    if(rst_i && !rst_d) begin
+        phi1 <= 1'b0;
+        phi2 <= 1'b1;
+    end
+    else begin 
+        phi1 <= ~phi1;
+        phi2 <= ~phi2;
+    end
+end
+
+// CPU interface signal
+wire            cpu_rw;
+wire            cpu_as_n;
+wire            cpu_lds_n;
+wire            cpu_uds_n;
+wire            cpu_E;
+wire            vma_n
+wire            cpu_fc0;
+wire            cpu_fc1;
+wire            cpu_fc2;
+wire            cpu_bg_n;
+wire            cpu_reset_n_o;
+wire    [15:0]  cpu_din;
+wire    [15:0]  cpu_dout;
+wire    [23:1]  cpu_a;
+
+
+fx68k CPU (
+	.clk        ( clk_i     ),
+	.extReset   ( rst_i     ),
+	.pwrUp      ( rst_i     ),
+	.enPhi1     ( phi1       ),
+	.enPhi2     ( phi2       ),
+
+	.eRWn       ( cpu_rw    ),
+	.ASn        ( cpu_as_n  ),
+	.LDSn       ( cpu_lds_n ),
+	.UDSn       ( cpu_uds_n ),
+	.E          ( cpu_E     ),
+	.VMAn       ( vma_n     ),
+	.FC0        ( cpu_fc0   ),
+	.FC1        ( cpu_fc1   ),
+	.FC2        ( cpu_fc2   ),
+	.BGn        ( cpu_bg_n  ),
+	.oRESETn    ( cpu_reset_n_o ),
+	.oHALTEDn   (),
+	.DTACKn     ( 1'b0     ),
+	.VPAn       ( 1'b1     ),
+	.BERRn      ( 1'b1     ),
+	.HALTn      ( 1'b1     ),
+	.BRn        ( 1'b1 ),
+	.BGACKn     ( 1'b1 ),
+	.IPL0n      ( 1'b1     ),
+	.IPL1n      ( 1'b1     ),
+	.IPL2n      ( 1'b1     ),
+	.iEdb       ( cpu_din    ),
+	.oEdb       ( cpu_dout   ),
+	.eab        ( cpu_a      )
+);
