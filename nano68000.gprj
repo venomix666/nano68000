@@ -3,6 +3,13 @@
 <Project>
     <Template>FPGA</Template>
     <Version>5</Version>
-    <Device name="" pn="">gw2ar18c-000</Device>
-    <FileList/>
+    <Device name="GW2AR-18C" pn="GW2AR-LV18QN88C8/I7">gw2ar18c-000</Device>
+    <FileList>
+        <File path="src/bootrom.v" type="file.verilog" enable="1"/>
+        <File path="src/fx68k/fx68k.sv" type="file.verilog" enable="1"/>
+        <File path="src/fx68k/fx68kAlu.sv" type="file.verilog" enable="1"/>
+        <File path="src/fx68k/uaddrPla.sv" type="file.verilog" enable="1"/>
+        <File path="src/instram.v" type="file.verilog" enable="1"/>
+        <File path="src/nano68000_top.v" type="file.verilog" enable="1"/>
+    </FileList>
 </Project>
