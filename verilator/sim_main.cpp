@@ -7,7 +7,7 @@
 int main(int argc, char** argv) {
     Verilated::commandArgs(argc, argv);
 
-    uint64_t max_cycles = 200;
+    uint64_t max_cycles = 800;
     for (int i = 1; i < argc; ++i) {
         if (std::string(argv[i]) == "--cycles" && i + 1 < argc) {
             max_cycles = std::strtoull(argv[++i], nullptr, 10);

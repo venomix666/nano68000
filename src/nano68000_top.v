@@ -66,6 +66,7 @@ wire            cpu_fc0;
 wire            cpu_fc1;
 wire            cpu_fc2;
 wire            cpu_bg_n;
+wire            cpu_dtack_n;
 wire            cpu_reset_n_o;
 reg     [15:0]  cpu_data_i;
 wire    [15:0]  cpu_data_o;
@@ -91,7 +92,7 @@ fx68k cpu (
 	.BGn        ( cpu_bg_n  ),
 	.oRESETn    ( cpu_reset_n_o ),
 	.oHALTEDn   (),
-	.DTACKn     ( 1'b0     ),
+	.DTACKn     ( cpu_dtack_n     ),
 	.VPAn       ( 1'b1     ),
 	.BERRn      ( 1'b1     ),
 	.HALTn      ( 1'b1     ),
@@ -109,7 +110,7 @@ fx68k cpu (
 wire            ram_cs;
 wire    [15:0]  ram_data_o;
 
-assign ram_cs = cpu_addr[15]; // Just decode 64k-128k as RAM for now
+//assign ram_cs = cpu_addr[16]; // Just decode 64k-128k as RAM for now
 
 instram main_ram(
     .clk(clk_i),
@@ -124,12 +125,25 @@ instram main_ram(
 wire            rom_cs;
 wire    [15:0]  rom_data_o;
 
-assign rom_cs = ~cpu_addr[15]; // Just decode 0-64k as ROM for now
+//assign rom_cs = ~cpu_addr[16]; // Just decode 0-64k as ROM for now
 
 bootrom bootrom_inst(
     .clk(clk_i),
     .addr(cpu_addr[12:1]),
     .data(rom_data_o)
+);
+
+// Address decoder
+addr_decoder addr_decoder(
+    .clk_i(clk_i),
+    .rst_i(rst_i),
+    .addr_i(cpu_addr),
+    .as_n_i(cpu_as_n),
+    .uds_n_i(cpu_uds_n),
+    .lds_n_i(cpu_lds_n),
+    .rom_cs_o(rom_cs),
+    .ram_cs_o(ram_cs),
+    .dtack_n_o(cpu_dtack_n)
 );
 
 // CPU input data mux

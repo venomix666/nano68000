@@ -8,6 +8,10 @@ start:
         moveq   #0,d0
         moveq   #1,d1
 loop:
+        jsr     s0
+        bra.s   loop
+
+s0:
         addq.l  #1,d0
         eor.w   d1,d0
-        bra.s   loop
+        rts

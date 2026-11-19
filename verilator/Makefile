@@ -2,7 +2,7 @@ TOP       := nano68000_top
 SIM_BIN   := obj_dir/V$(TOP)
 HEX_FILE  := nano68000.hex
 D		  := ../src
-V_SRCS    := $D/nano68000_top.v $D/instram.v $D/bootrom.v \
+V_SRCS    := $D/nano68000_top.v $D/instram.v $D/bootrom.v $D/addr_decoder.v \
 			 $D/fx68k/fx68k.sv $D/fx68k/fx68kAlu.sv $D/fx68k/uaddrPla.sv
 VFLAGS    := --cc --exe --build -Wall \
 			 -Wno-DECLFILENAME \
@@ -22,7 +22,7 @@ $(SIM_BIN): $(V_SRCS) sim_main.cpp $(HEX_FILE)
 	verilator $(VFLAGS) --top-module $(TOP) $(V_SRCS) sim_main.cpp
 
 run: $(SIM_BIN)
-	./$(SIM_BIN) --cycles 200 +trace
+	./$(SIM_BIN) --cycles 800 +trace
 
 clean:
 	rm -rf obj_dir dump.vcd
