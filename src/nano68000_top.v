@@ -8,12 +8,12 @@
 module nano68000_top
 (
     input           clk_i,
-    input           rst_i //S1
+    input           rst_i, //S1
     //input           clkusb_i,
     input           uart_rx_i,
     input           uart_b_rx_i,
     output          uart_tx_o,
-    output          uart_b_tx_o,
+    output          uart_b_tx_o
     //output          leds[5:0],
     //output          ws2812_o,
     //inout [12:0]    gpio,
@@ -139,10 +139,7 @@ bootrom bootrom_inst(
 // UART
 wire    [7:0]   uart_data_o;
 wire            uart_cs;
-wire            uart_rx_i;
-wire            uart_tx_o;
-wire            uart_b_rx_i;
-wire            uart_b_tx_o;
+
 uart uart_inst(
         .clk(clk_i),
         .rst_n(rst_n),

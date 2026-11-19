@@ -3,7 +3,10 @@ SIM_BIN   := obj_dir/V$(TOP)
 HEX_FILE  := nano68000.hex
 D		  := ../src
 V_SRCS    := $D/nano68000_top.v $D/instram.v $D/bootrom.v $D/addr_decoder.v \
-			 $D/fx68k/fx68k.sv $D/fx68k/fx68kAlu.sv $D/fx68k/uaddrPla.sv
+			 $D/fx68k/fx68k.sv $D/fx68k/fx68kAlu.sv $D/fx68k/uaddrPla.sv \
+			 $D/UART/uart.v $D/UART/uart_rx.v $D/UART/uart_tx.v \
+			 $D/UART/uart_rx_flex.v $D/UART/uart_tx_flex.v
+
 VFLAGS    := --cc --exe --build -Wall \
 			 -Wno-DECLFILENAME \
 			 -Wno-WIDTHEXPAND \
@@ -13,6 +16,7 @@ VFLAGS    := --cc --exe --build -Wall \
 			 -Wno-TIMESCALEMOD \
 			 -Wno-INITIALDLY \
 			 -Wno-UNOPTFLAT \
+			 -Wno-COMBDLY \
 			 -Wno-lint \
 			 --trace
 

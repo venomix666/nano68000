@@ -7,6 +7,7 @@ module addr_decoder (
     input           lds_n_i,
     output          rom_cs_o,
     output          ram_cs_o,
+    output          uart_cs_o,
     output          dtack_n_o
 );
 
