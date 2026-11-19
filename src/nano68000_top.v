@@ -10,10 +10,10 @@ module nano68000_top
     input           clk_i,
     input           rst_i //S1
     //input           clkusb_i,
-    //input           uart_rx_i,
-    //input           uart_b_rx_i,
-    //output          uart_tx_o,
-    //output          uart_b_tx_o,
+    input           uart_rx_i,
+    input           uart_b_rx_i,
+    output          uart_tx_o,
+    output          uart_b_tx_o,
     //output          leds[5:0],
     //output          ws2812_o,
     //inout [12:0]    gpio,
@@ -38,6 +38,9 @@ module nano68000_top
     //output [1:0] O_sdram_ba,        // two banks                               
     //output [3:0] O_sdram_dqm        // 32/4        
 );
+
+wire rst_n;
+assign rst_n = ~rst_i;
 
 reg         phi1;
 reg         phi2;
@@ -133,6 +136,29 @@ bootrom bootrom_inst(
     .data(rom_data_o)
 );
 
+// UART
+wire    [7:0]   uart_data_o;
+wire            uart_cs;
+wire            uart_rx_i;
+wire            uart_tx_o;
+wire            uart_b_rx_i;
+wire            uart_b_tx_o;
+uart uart_inst(
+        .clk(clk_i),
+        .rst_n(rst_n),
+        .data_i(cpu_data_o[15:8]),
+        .uart_rx(uart_rx_i),
+        .uart_b_rx(uart_b_rx_i),
+        .uart_cs(uart_cs),
+        .R_W_n(wr_n),
+        .reg_addr(cpu_addr[9:1]),
+        .data_o(uart_data_o),
+        .uart_a_rx_irq_n_o(),
+        .uart_b_rx_irq_n_o(),
+        .uart_tx(uart_tx_o),
+        .uart_b_tx(uart_b_tx_o)
+);
+
 // Address decoder
 addr_decoder addr_decoder(
     .clk_i(clk_i),
@@ -143,6 +169,7 @@ addr_decoder addr_decoder(
     .lds_n_i(cpu_lds_n),
     .rom_cs_o(rom_cs),
     .ram_cs_o(ram_cs),
+    .uart_cs_o(uart_cs),
     .dtack_n_o(cpu_dtack_n)
 );
 
@@ -150,6 +177,7 @@ addr_decoder addr_decoder(
 always @(*) begin
     if(rom_cs == 1'b1) cpu_data_i = rom_data_o;
     else if(ram_cs == 1'b1) cpu_data_i = ram_data_o;
+    else if(uart_cs == 1'b1) cpu_data_i = {uart_data_o, 8'h00};
     else cpu_data_i = cpu_data_o;
 end
 
