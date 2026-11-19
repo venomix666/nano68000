@@ -61,18 +61,18 @@ wire            cpu_as_n;
 wire            cpu_lds_n;
 wire            cpu_uds_n;
 wire            cpu_E;
-wire            vma_n
+wire            vma_n;
 wire            cpu_fc0;
 wire            cpu_fc1;
 wire            cpu_fc2;
 wire            cpu_bg_n;
 wire            cpu_reset_n_o;
-wire    [15:0]  cpu_din;
-wire    [15:0]  cpu_dout;
-wire    [23:1]  cpu_a;
+reg     [15:0]  cpu_data_i;
+wire    [15:0]  cpu_data_o;
+wire    [23:1]  cpu_addr;
 
 
-fx68k CPU (
+fx68k cpu (
 	.clk        ( clk_i     ),
 	.extReset   ( rst_i     ),
 	.pwrUp      ( rst_i     ),
@@ -100,7 +100,43 @@ fx68k CPU (
 	.IPL0n      ( 1'b1     ),
 	.IPL1n      ( 1'b1     ),
 	.IPL2n      ( 1'b1     ),
-	.iEdb       ( cpu_din    ),
-	.oEdb       ( cpu_dout   ),
-	.eab        ( cpu_a      )
+	.iEdb       ( cpu_data_i ),
+	.oEdb       ( cpu_data_o ),
+	.eab        ( cpu_addr   )
 );
+
+// RAM, block RAM for now
+wire            ram_cs;
+wire    [15:0]  ram_data_o;
+
+assign ram_cs = cpu_addr[15]; // Just decode 64k-128k as RAM for now
+
+instram main_ram(
+    .clk(clk_i),
+    .addr(cpu_addr[15:1]),
+    .rwn(cpu_rw),
+    .cs(ram_cs),
+    .data_i(cpu_data_o),
+    .data_o(ram_data_o)
+);
+
+// ROM
+wire            rom_cs;
+wire    [15:0]  rom_data_o;
+
+assign rom_cs = ~cpu_addr[15]; // Just decode 0-64k as ROM for now
+
+bootrom bootrom_inst(
+    .clk(clk_i),
+    .addr(cpu_addr[12:1]),
+    .data(rom_data_o)
+);
+
+// CPU input data mux
+always @(*) begin
+    if(rom_cs == 1'b1) cpu_data_i = rom_data_o;
+    else if(ram_cs == 1'b1) cpu_data_i = ram_data_o;
+    else cpu_data_i = cpu_data_o;
+end
+
+endmodule
