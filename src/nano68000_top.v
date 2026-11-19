@@ -147,7 +147,7 @@ uart uart_inst(
         .uart_rx(uart_rx_i),
         .uart_b_rx(uart_b_rx_i),
         .uart_cs(uart_cs),
-        .R_W_n(wr_n),
+        .R_W_n(cpu_rw),
         .reg_addr(cpu_addr[9:1]),
         .data_o(uart_data_o),
         .uart_a_rx_irq_n_o(),

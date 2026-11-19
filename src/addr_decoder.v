@@ -22,7 +22,7 @@ module addr_decoder (
     // UART: $800000 - $80000F
     assign uart_cs_o = bus_active & (addr_i[23:3] == 21'h100000);
 
-    wire valid_addr = rom_cs_o | ram_cs_o;
+    wire valid_addr = rom_cs_o | ram_cs_o | uart_cs_o;
 
     reg dtack_n_r;
 
