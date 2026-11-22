@@ -70,6 +70,7 @@ wire            cpu_fc1;
 wire            cpu_fc2;
 wire            cpu_bg_n;
 wire            cpu_dtack_n;
+wire            cpu_berr_n;
 wire            cpu_reset_n_o;
 reg     [15:0]  cpu_data_i;
 wire    [15:0]  cpu_data_o;
@@ -97,7 +98,7 @@ fx68k cpu (
 	.oHALTEDn   (),
 	.DTACKn     ( cpu_dtack_n     ),
 	.VPAn       ( 1'b1     ),
-	.BERRn      ( 1'b1     ),
+	.BERRn      ( cpu_berr_n ),
 	.HALTn      ( 1'b1     ),
 	.BRn        ( 1'b1 ),
 	.BGACKn     ( 1'b1 ),
@@ -120,6 +121,8 @@ instram main_ram(
     .addr(cpu_addr[15:1]),
     .rwn(cpu_rw),
     .cs(ram_cs),
+    .lds_i(cpu_lds_n),
+    .uds_i(cpu_uds_n),
     .data_i(cpu_data_o),
     .data_o(ram_data_o)
 );
@@ -174,6 +177,7 @@ addr_decoder addr_decoder(
     .uart_cs_o(uart_cs),
     .addr_decoder_cs_o(uart_decoder_cs),
     .dtack_n_o(cpu_dtack_n),
+    .berr_n_o(cpu_berr_n),
     .data_o(addr_decoder_data_o)
 );
 

@@ -11,6 +11,7 @@ module addr_decoder (
     output          uart_cs_o,
     output          addr_decoder_cs_o,
     output          dtack_n_o,
+    output          berr_n_o,
     output  [7:0]   data_o
 );
 
@@ -36,18 +37,23 @@ module addr_decoder (
     wire valid_addr = rom_cs_o | ram_cs_o | uart_cs_o | addr_decoder_cs;
 
     reg dtack_n_r;
+    reg berr_n_r;
 
     always @(posedge clk_i or posedge rst_i) begin
         if (rst_i) begin
             dtack_n_r <= 1'b1;
+            berr_n_r <= 1'b1;
         end else if (!bus_active) begin
             // Deassert DTACKn as soon as the bus cycle ends
             dtack_n_r <= 1'b1;
+            berr_n_r <= 1'b1;
         end else if (valid_addr) begin
             // 1 clk_i cycle after bus_active + valid_addr is seen
             dtack_n_r <= 1'b0;
+            berr_n_r <= 1'b1;
         end else begin
             dtack_n_r <= 1'b1;
+            berr_n_r <= 1'b0;
         end
     end
 
@@ -65,6 +71,7 @@ module addr_decoder (
     end
 
     assign dtack_n_o = dtack_n_r;
+    assign berr_n_o = berr_n_r;
     assign addr_decoder_cs_o = addr_decoder_cs;
     assign data_o = data_o_reg;
 endmodule
