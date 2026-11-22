@@ -157,6 +157,10 @@ uart uart_inst(
 );
 
 // Address decoder
+
+wire        addr_decoder_cs;
+wire [7:0]  addr_decoder_data_o;
+
 addr_decoder addr_decoder(
     .clk_i(clk_i),
     .rst_i(rst_i),
@@ -164,10 +168,13 @@ addr_decoder addr_decoder(
     .as_n_i(cpu_as_n),
     .uds_n_i(cpu_uds_n),
     .lds_n_i(cpu_lds_n),
+    .data_i(cpu_data_o[15:8]),
     .rom_cs_o(rom_cs),
     .ram_cs_o(ram_cs),
     .uart_cs_o(uart_cs),
-    .dtack_n_o(cpu_dtack_n)
+    .addr_decoder_cs_o(uart_decoder_cs),
+    .dtack_n_o(cpu_dtack_n),
+    .data_o(addr_decoder_data_o)
 );
 
 // CPU input data mux
@@ -175,6 +182,7 @@ always @(*) begin
     if(rom_cs == 1'b1) cpu_data_i = rom_data_o;
     else if(ram_cs == 1'b1) cpu_data_i = ram_data_o;
     else if(uart_cs == 1'b1) cpu_data_i = {uart_data_o, 8'h00};
+    else if(addr_decoder_cs == 1'b1) cpu_data_i = {addr_decoder_data_o, 8'h00};
     else cpu_data_i = cpu_data_o;
 end
 

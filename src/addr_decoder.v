@@ -5,24 +5,35 @@ module addr_decoder (
     input           as_n_i,
     input           uds_n_i,
     input           lds_n_i,
+    input   [7:0]   data_i,
     output          rom_cs_o,
     output          ram_cs_o,
     output          uart_cs_o,
-    output          dtack_n_o
+    output          addr_decoder_cs_o,
+    output          dtack_n_o,
+    output  [7:0]   data_o
 );
+
+    reg             rom_shadow;
+    reg     [7:0]   data_o_reg;
+    wire            addr_decoder_cs;
 
     wire bus_active = ~as_n_i & (~uds_n_i | ~lds_n_i);
 
-    // 8 KB Boot ROM: $000000 - $001FFF (word addresses $000000 - $000FFF)
-    assign rom_cs_o = bus_active & (addr_i[23:12] == 12'h000);
+    // 8 KB Boot ROM: Shadowed at $000000 - $001FFF (word addresses $000000 - $000FFF)
+    //                Always at   $ffe000 - $ffffff
+    assign rom_cs_o = bus_active & ((rom_shadow & (addr_i[23:12] == 12'h000)) | (addr_i[23:13] ==  11'h7ff));
 
-    // 64 KB RAM: $010000 - $01FFFF (word addresses $008000 - $00FFFF)
-    assign ram_cs_o = bus_active & (addr_i[23:15] == 9'b000000010);
+    // 64 KB RAM: $fe0000 - $feffff
+    assign ram_cs_o = bus_active & (addr_i[23:16] == 8'hfe);
 
     // UART: $800000 - $80000F
     assign uart_cs_o = bus_active & (addr_i[23:3] == 21'h100000);
 
-    wire valid_addr = rom_cs_o | ram_cs_o | uart_cs_o;
+    // Addr decoder $800010 - $80001F
+    assign addr_decoder_cs = bus_active & (addr_i[23:3] == 21'h100002);
+
+    wire valid_addr = rom_cs_o | ram_cs_o | uart_cs_o | addr_decoder_cs;
 
     reg dtack_n_r;
 
@@ -40,6 +51,20 @@ module addr_decoder (
         end
     end
 
-    assign dtack_n_o = dtack_n_r;
+    always @(posedge clk_i or posedge rst_i) begin
+        if(rst_i) begin
+            rom_shadow <= 1'b1;
+        end else begin
+            if(addr_decoder_cs && addr_i[8:1] == 8'd0) rom_shadow <= data_i[0];
+        end
+    end
 
+    always @(*) begin
+        if(addr_i[8:1] == 8'd0) data_o_reg <= {7'd0, rom_shadow};
+        else data_o_reg <= 8'd0;
+    end
+
+    assign dtack_n_o = dtack_n_r;
+    assign addr_decoder_cs_o = addr_decoder_cs;
+    assign data_o = data_o_reg;
 endmodule
