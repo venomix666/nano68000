@@ -12,7 +12,7 @@ MAP     := $(TARGET).map
 LST     := $(TARGET).lst
 
 LDSCRIPT := rom.ld
-SRCS     := vectors.c boot.c
+SRCS     := vectors.c boot.c uart.c bus_err.c
 OBJS     := $(SRCS:.c=.o)
 
 CFLAGS  := -m68000 -Os -ffreestanding -nostdlib -Wall -Wextra -Werror
