@@ -9,34 +9,20 @@ module nano68000_top
 (
     input           clk_i,
     input           rst_i, //S1
-    //input           clkusb_i,
     input           uart_rx_i,
     input           uart_b_rx_i,
     output          uart_tx_o,
-    output          uart_b_tx_o
-    //output          leds[5:0],
-    //output          ws2812_o,
-    //inout [12:0]    gpio,
-    //output          sdclk,
-    //output            tmds_clk_p    ,
-    //output            tmds_clk_n    ,
-    //output     [2:0]  tmds_data_p   ,//{r,g,b}
-    //output     [2:0]  tmds_data_n   ,
-    //inout           sdcmd,
-    //inout [3:0]     sddat,
-    //inout           usb_dp,
-    //inout           usb_dm,
-    // Magic SDRAM pin names
-    //output O_sdram_clk,                                                        
-    //output O_sdram_cke,                                                        
-    //output O_sdram_cs_n,            // chip select                             
-    //output O_sdram_cas_n,           // columns address select                  
-    //output O_sdram_ras_n,           // row address select                      
-    //output O_sdram_wen_n,           // write enable                            
-    //inout [31:0] IO_sdram_dq,       // 32 bit bidirectional data bus           
-    //output [10:0] O_sdram_addr,     // 11 bit multiplexed address bus          
-    //output [1:0] O_sdram_ba,        // two banks                               
-    //output [3:0] O_sdram_dqm        // 32/4        
+    output          uart_b_tx_o,
+    output O_sdram_clk,                                                        
+    output O_sdram_cke,                                                        
+    output O_sdram_cs_n,            // chip select                             
+    output O_sdram_cas_n,           // columns address select                  
+    output O_sdram_ras_n,           // row address select                      
+    output O_sdram_wen_n,           // write enable                            
+    inout [31:0] IO_sdram_dq,       // 32 bit bidirectional data bus           
+    output [10:0] O_sdram_addr,     // 11 bit multiplexed address bus          
+    output [1:0] O_sdram_ba,        // two banks                               
+    output [3:0] O_sdram_dqm        // 32/4        
 );
 
 wire rst_n;
@@ -76,6 +62,7 @@ reg     [15:0]  cpu_data_i;
 wire    [15:0]  cpu_data_o;
 wire    [23:1]  cpu_addr;
 
+assign cpu_dtack_n = (sdram_cs ? dtack_sdram : addr_dec_dtack_n);
 
 fx68k cpu (
 	.clk        ( clk_i     ),
@@ -109,6 +96,48 @@ fx68k cpu (
 	.oEdb       ( cpu_data_o ),
 	.eab        ( cpu_addr   )
 );
+
+// SDRAM
+wire clk100;
+wire clk100_p;
+
+wire sdram_data_o;
+wire dtack_sdram;
+wire sdram_cs;
+
+// PLL to generate SDRAM clocks
+Gowin_rPLL sdram_pll(
+        .clkout(clk100), //output clkout
+        .clkoutp(clk100_p), //output clkoutp
+        .clkin(clk_i) //input clkin
+);
+
+sdram_68k_interface sdram_68ks_interface_inst(
+    .clk_100(clk100),
+    .clk_100p(clk100p),
+    .reset_n(rst_n),
+    .addr_i(cpu_addr),
+    .data_i(cpu_data_o),
+    .data_o(sdram_data_o),
+    .dtack_n(dtack_sdram),
+    .rw_n(cpu_rw),
+    .as_n(cpu_as_n),
+    .lds_n(cpu_lds_n),
+    .uds_n(cpu_uds_n),
+    .ram_cs(sdram_cs),
+
+    .sd_clk(O_sdram_clk),                                        
+    .sd_cke(O_sdram_cke),                                                 
+    .sd_cs_n(O_sdram_cs_n),                                               
+    .sd_cas_n(O_sdram_cas_n),                                             
+    .sd_ras_n(O_sdram_ras_n),                                             
+    .sd_we_n(O_sdram_wen_n),                                             
+    .sd_dqm(O_sdram_dqm),                                                 
+    .sd_a(O_sdram_addr),                                               
+    .sd_ba(O_sdram_ba),                                                   
+    .sd_dq(IO_sdram_dq)
+);
+        
 
 // RAM, block RAM for now
 wire            ram_cs;
@@ -163,6 +192,7 @@ uart uart_inst(
 
 wire        addr_decoder_cs;
 wire [7:0]  addr_decoder_data_o;
+wire        addr_dec_dtack_n;
 
 addr_decoder addr_decoder(
     .clk_i(clk_i),
@@ -176,7 +206,8 @@ addr_decoder addr_decoder(
     .ram_cs_o(ram_cs),
     .uart_cs_o(uart_cs),
     .addr_decoder_cs_o(uart_decoder_cs),
-    .dtack_n_o(cpu_dtack_n),
+    .sdram_cs_o(sdram_cs),
+    .dtack_n_o(addr_dec_dtack_n),
     .berr_n_o(cpu_berr_n),
     .data_o(addr_decoder_data_o)
 );
@@ -185,6 +216,7 @@ addr_decoder addr_decoder(
 always @(*) begin
     if(rom_cs == 1'b1) cpu_data_i = rom_data_o;
     else if(ram_cs == 1'b1) cpu_data_i = ram_data_o;
+    else if(sdram_cs == 1'b1) cpu_data_i = sdram_data_o;
     else if(uart_cs == 1'b1) cpu_data_i = {uart_data_o, 8'h00};
     else if(addr_decoder_cs == 1'b1) cpu_data_i = {addr_decoder_data_o, 8'h00};
     else cpu_data_i = cpu_data_o;

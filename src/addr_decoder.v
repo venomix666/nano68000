@@ -10,6 +10,7 @@ module addr_decoder (
     output          ram_cs_o,
     output          uart_cs_o,
     output          addr_decoder_cs_o,
+    output          sdram_cs_o,
     output          dtack_n_o,
     output          berr_n_o,
     output  [7:0]   data_o
@@ -28,13 +29,16 @@ module addr_decoder (
     // 64 KB RAM: $fe0000 - $feffff
     assign ram_cs_o = bus_active & (addr_i[23:16] == 8'hfe);
 
+    // 8 MB SDRAM: $000000 - $7fffff - first 8k overlayed by ROM
+    assign sdram_cs_o = bus_active & (addr_i[23] == 1'b0) & !(rom_shadow & (addr_i[23:12] == 12'h000));
+
     // UART: $800000 - $80000F
     assign uart_cs_o = bus_active & (addr_i[23:3] == 21'h100000);
 
     // Addr decoder $800010 - $80001F
     assign addr_decoder_cs = bus_active & (addr_i[23:3] == 21'h100002);
 
-    wire valid_addr = rom_cs_o | ram_cs_o | uart_cs_o | addr_decoder_cs;
+    wire valid_addr = rom_cs_o | ram_cs_o | uart_cs_o | addr_decoder_cs | sdram_cs_o;
 
     reg dtack_n_r;
     reg berr_n_r;
