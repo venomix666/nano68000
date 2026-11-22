@@ -1,12 +1,14 @@
 #include "uart.h"
 
-#define UART_DATA (*(volatile uint8_t *)0x800000)
+#define UART_TX_DATA (*(volatile uint8_t *)0x800000)
 #define UART_TX_READY (*(volatile uint8_t *)0x800002)
+#define UART_RX_DATA (*(volatile uint8_t *)0x800004)
+#define UART_RX_AVAIL (*(volatile uint8_t *)0x800006)
 
 void uart_putc(char c)
 {
     while(UART_TX_READY == 0U);
-    UART_DATA = (uint8_t)c;
+    UART_TX_DATA = (uint8_t)c;
 }
 
 void uart_puts(const char *s)
@@ -14,6 +16,18 @@ void uart_puts(const char *s)
     while (*s) {
         uart_putc(*s++);
     }
+}
+
+uint8_t uart_avail(void)
+{
+    return UART_RX_AVAIL;
+}
+
+// Blocking uart getc
+uint8_t uart_getc(void)
+{
+    while(!uart_avail());
+    return UART_RX_DATA;
 }
 
 void uart_puthex_nibble(uint8_t nib)

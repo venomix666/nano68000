@@ -1,12 +1,10 @@
 #include <stdint.h>
 #include "uart.h"
 
+extern void monitor_run(void);
+
 void start(void)
 {
-    uart_puts("Hello from C\r\n");
-
-    for (;;) {
-        __asm__ volatile ("nop");
-    }
+    monitor_run();
 }
 
