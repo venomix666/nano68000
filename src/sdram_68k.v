@@ -111,8 +111,8 @@ module sdram_68k_interface (
                 dtack_n_r  <= 1'b1;
             end
 
-            if (state > IDLE)
-                if (ref_timer < 12'd1560)
+            if (state >= IDLE && state != REFRESH && ref_timer < 780)
+                if (ref_timer < 12'd780)
                     ref_timer <= ref_timer + 1'b1;
 
             case (state)
@@ -147,7 +147,7 @@ module sdram_68k_interface (
                 IDLE: begin
                     {sd_ras_n, sd_cas_n, sd_we_n} <= C_NOP;
 
-                    if (ref_timer >= 12'd1560) begin
+                    if (ref_timer >= 12'd780) begin
                         state <= REFRESH;
                     end else if (!as_n && ram_cs && !cycle_done) begin
                         if (rw_n && cache_hit) begin
