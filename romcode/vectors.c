@@ -3,7 +3,7 @@
 extern void start(void);
 extern void bus_error_entry(void);
 
-#define INITIAL_SSP 0x00FE1000UL
+#define INITIAL_SSP 0x00800000UL
 
 __attribute__((section(".vectors"), used))
 const uint32_t vectors[] = {
