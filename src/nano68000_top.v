@@ -101,7 +101,7 @@ fx68k cpu (
 wire clk100;
 wire clk100_p;
 
-wire sdram_data_o;
+wire [15:0] sdram_data_o;
 wire dtack_sdram;
 wire sdram_cs;
 
@@ -114,7 +114,7 @@ Gowin_rPLL sdram_pll(
 
 sdram_68k_interface sdram_68ks_interface_inst(
     .clk_100(clk100),
-    .clk_100p(clk100p),
+    .clk_100p(clk100_p),
     .reset_n(rst_n),
     .addr_i(cpu_addr),
     .data_i(cpu_data_o),
@@ -205,7 +205,7 @@ addr_decoder addr_decoder(
     .rom_cs_o(rom_cs),
     .ram_cs_o(ram_cs),
     .uart_cs_o(uart_cs),
-    .addr_decoder_cs_o(uart_decoder_cs),
+    .addr_decoder_cs_o(addr_decoder_cs),
     .sdram_cs_o(sdram_cs),
     .dtack_n_o(addr_dec_dtack_n),
     .berr_n_o(cpu_berr_n),
