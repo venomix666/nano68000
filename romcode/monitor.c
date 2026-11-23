@@ -4,6 +4,7 @@
 #define LINE_BUF_LEN 64
 
 extern void cmd_memtest(uint32_t start, uint32_t end);
+extern int srec_load(uint32_t *entry_out, int *has_entry);
 
 static int hex_nibble(char c)
 {
@@ -169,7 +170,6 @@ static void cmd_go(const char *args)
 void monitor_run(void)
 {
     char line[LINE_BUF_LEN];
-    uint32_t start, end;
 
     uart_puts("\r\nnano68000 Monitor Ready\r\n");
 
@@ -200,8 +200,9 @@ void monitor_run(void)
             case 'G':
                 cmd_go(p);
                 break;
-            case 'm':
-            case 'M':
+            case 't':
+            case 'T':
+                uint32_t start, end;
                 if(!parse_hex_u32(&p, &start)) {
                     uart_puts("Illegal start address\r\n");
                     break;
@@ -213,6 +214,19 @@ void monitor_run(void)
                 }
                 cmd_memtest(start, end);
                 break;
+            case 's':
+            case 'S':
+                uint32_t entry = 0;
+                int has_entry = 0;
+                int rc = srec_load(&entry, &has_entry);
+                if(rc == 0 && has_entry) {
+                    uart_puts("Entry point: ");
+                    uart_puthex32(entry);
+                    uart_puts(" (use 'g ");
+                    uart_puthex32(entry);
+                    uart_puts("' to run)\r\n");
+                }
+                break;
             case 'h':
             case 'H':
             case '?':
@@ -220,7 +234,8 @@ void monitor_run(void)
                 uart_puts("  d <addr> [len]  - hex/ASCII memory dump\r\n");
                 uart_puts("  w <addr> <val>  - write byte to address\r\n");
                 uart_puts("  g <addr>        - call code at even address\r\n");
-                uart_puts("  m <addr> <addr> - test memory between addrs\r\n");
+                uart_puts("  t <addr> <addr> - test memory between addrs\r\n");
+                uart_puts("  s               - load S-record\r\n");
                 uart_puts("  h               - help\r\n");
                 break;
             default:
