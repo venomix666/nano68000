@@ -199,6 +199,7 @@ addr_decoder addr_decoder(
     .rst_i(rst_i),
     .addr_i(cpu_addr),
     .as_n_i(cpu_as_n),
+    .rw_n(cpu_rw),                                  
     .uds_n_i(cpu_uds_n),
     .lds_n_i(cpu_lds_n),
     .data_i(cpu_data_o[15:8]),
