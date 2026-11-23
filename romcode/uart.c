@@ -40,6 +40,12 @@ void uart_puthex_nibble(uint8_t nib)
     }
 }
 
+void uart_puthex8(uint8_t val)
+{
+    uart_puthex_nibble(val >> 4);
+    uart_puthex_nibble(val & 0x0f);
+}
+
 void uart_puthex16(uint16_t val)
 {
     for (int shift = 12; shift >= 0; shift -= 4) {

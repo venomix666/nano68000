@@ -3,6 +3,8 @@
 
 #define LINE_BUF_LEN 64
 
+extern void cmd_memtest(uint32_t start, uint32_t end);
+
 static int hex_nibble(char c)
 {
     if (c >= '0' && c <= '9') {
@@ -167,6 +169,7 @@ static void cmd_go(const char *args)
 void monitor_run(void)
 {
     char line[LINE_BUF_LEN];
+    uint32_t start, end;
 
     uart_puts("\r\nnano68000 Monitor Ready\r\n");
 
@@ -197,6 +200,19 @@ void monitor_run(void)
             case 'G':
                 cmd_go(p);
                 break;
+            case 'm':
+            case 'M':
+                if(!parse_hex_u32(&p, &start)) {
+                    uart_puts("Illegal start address\r\n");
+                    break;
+                }
+
+                if(!parse_hex_u32(&p, &end)) {
+                    uart_puts("Illegal end address\r\n");
+                    break;
+                }
+                cmd_memtest(start, end);
+                break;
             case 'h':
             case 'H':
             case '?':
@@ -204,6 +220,7 @@ void monitor_run(void)
                 uart_puts("  d <addr> [len]  - hex/ASCII memory dump\r\n");
                 uart_puts("  w <addr> <val>  - write byte to address\r\n");
                 uart_puts("  g <addr>        - call code at even address\r\n");
+                uart_puts("  m <addr> <addr> - test memory between addrs\r\n");
                 uart_puts("  h               - help\r\n");
                 break;
             default:
