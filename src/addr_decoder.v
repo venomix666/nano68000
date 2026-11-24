@@ -12,6 +12,7 @@ module addr_decoder (
     output          uart_cs_o,
     output          addr_decoder_cs_o,
     output          sdram_cs_o,
+    output          sd_cs_o,
     output          dtack_n_o,
     output          berr_n_o,
     output  [7:0]   data_o
@@ -39,7 +40,10 @@ module addr_decoder (
     // Addr decoder $800010 - $80001F
     assign addr_decoder_cs = bus_active & (addr_i[23:3] == 21'h100002);
 
-    wire valid_addr = rom_cs_o | ram_cs_o | uart_cs_o | addr_decoder_cs | sdram_cs_o;
+    // SD card $810000 - $8103FF
+    assign sd_cs_o = bus_active & (addr_i[23:10] == 14'h2040);
+
+    wire valid_addr = rom_cs_o | ram_cs_o | uart_cs_o | addr_decoder_cs | sdram_cs_o | sd_cs_o;
 
     reg dtack_n_r;
     reg berr_n_r;

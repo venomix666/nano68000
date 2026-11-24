@@ -13,6 +13,9 @@ module nano68000_top
     input           uart_b_rx_i,
     output          uart_tx_o,
     output          uart_b_tx_o,
+    output          sdclk,
+    inout           sdcmd,
+    inout   [3:0]   sddat,
     output O_sdram_clk,                                                        
     output O_sdram_cke,                                                        
     output O_sdram_cs_n,            // chip select                             
@@ -208,9 +211,29 @@ addr_decoder addr_decoder(
     .uart_cs_o(uart_cs),
     .addr_decoder_cs_o(addr_decoder_cs),
     .sdram_cs_o(sdram_cs),
+    .sd_cs_o(sd_cs),
     .dtack_n_o(addr_dec_dtack_n),
     .berr_n_o(cpu_berr_n),
     .data_o(addr_decoder_data_o)
+);
+
+// SD card
+wire            sd_cs;
+wire    [15:0]  sd_data_o;    
+
+sd_interface sd_interface_inst(
+    .clk_i(clk_i),
+    .rst_n_i(rst_n), 
+    .wr_n(cpu_rw),
+    .reg_addr_i(cpu_addr[9:1]),
+    .lds_i(cpu_lds_n),
+    .uds_i(cpu_uds_n),
+    .data_i(cpu_data_o),
+    .sd_cs(sd_cs),
+    .data_o(sd_data_o),
+    .sdclk(sdclk),
+    .sdcmd(sdcmd),
+    .sddat(sddat) 
 );
 
 // CPU input data mux
@@ -219,6 +242,7 @@ always @(*) begin
     else if(ram_cs == 1'b1) cpu_data_i = ram_data_o;
     else if(sdram_cs == 1'b1) cpu_data_i = sdram_data_o;
     else if(uart_cs == 1'b1) cpu_data_i = {uart_data_o, 8'h00};
+    else if(sd_cs == 1'b1) cpu_data_i = sd_data_o;
     else if(addr_decoder_cs == 1'b1) cpu_data_i = {addr_decoder_data_o, 8'h00};
     else cpu_data_i = cpu_data_o;
 end
